@@ -425,6 +425,7 @@ scope of the initializer expression is extended.
 r[destructors.scope.lifetime-extension.exprs]
 #### Extending based on expressions
 
+r[destructors.scope.lifetime-extension.exprs.extending]
 For a let statement with an initializer, an *extending expression* is an
 expression which is one of the following:
 
@@ -434,19 +435,26 @@ expression which is one of the following:
   expression], [braced struct][struct expression], or [tuple][tuple expression]
   expression.
 * The arguments to an extending [tuple struct] or [tuple variant] constructor expression.
+* The argument(s) to an extending [`pin!`] or [`format_args!`] [macro invocation] expression.
 * The final expression of any extending [block expression].
 
 So the borrow expressions in `&mut 0`, `(&1, &mut 2)`, and `Some(&mut 3)`
 are all extending expressions. The borrows in `&0 + &1` and `f(&mut 0)` are not.
 
+r[destructors.scope.lifetime-extension.exprs.borrow]
 The operand of any extending borrow expression has its temporary scope
 extended.
+
+r[destructors.scope.lifetime-extension.exprs.macros]
+The built-in macros [`pin!`] and [`format_args!`] create temporaries.
+Any extending [`pin!`] or [`format_args!`] [macro invocation] expression has an extended temporary scope.
 
 #### Examples
 
 Here are some examples where expressions have extended temporary scopes:
 
 ```rust
+# use std::pin::pin;
 # fn temp() {}
 // The temporary that stores the result of `temp()` lives in the same scope
 // as x in these cases.
@@ -455,6 +463,8 @@ let x = &temp();
 let x = &temp() as &dyn Send;
 # x;
 let x = (&*&temp(),);
+# x;
+let x = pin!(temp());
 # x;
 let x = { [Some(&temp()) ] };
 # x;
@@ -510,6 +520,7 @@ There is one additional case to be aware of: when a panic reaches a [non-unwindi
 [initialized]: glossary.md#initialized
 [interior mutability]: interior-mutability.md
 [lazy boolean expression]: expressions/operator-expr.md#lazy-boolean-operators
+[macro invocation]: macros.md#macro-invocation
 [non-unwinding ABI boundary]: items/functions.md#unwinding
 [panic]: panic.md
 [place context]: expressions.md#place-expressions-and-value-expressions
@@ -554,3 +565,6 @@ There is one additional case to be aware of: when a panic reaches a [non-unwindi
 [`match`]: expressions/match-expr.md
 [`while let`]: expressions/loop-expr.md#while-let-patterns
 [`while`]: expressions/loop-expr.md#predicate-loops
+
+[`pin!`]: std::pin::pin
+[`format_args!`]: core::format_args
